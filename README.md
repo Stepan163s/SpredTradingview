@@ -9,11 +9,9 @@
 - **Instrument 1 / Instrument 2**  
   Выберите тикеры нужных фьючерсов на газ. По умолчанию установлены: `RUS:NGJ2025` и `RUS:NGH2025`.
 
-- **Use Percentage Spread Calculation?**  
-  Опция для переключения между расчетом спреда в абсолютном значении и в процентах.
 
 - **Threshold**  
-  Значение порога, которое задается как абсолютное число или процент (в зависимости от выбранного режима).
+  Значение порога, которое задается как абсолютное число.
 
 При достижении спредом заданного порога (сверху или снизу) срабатывают алерты, если они настроены в TradingView.
 
@@ -33,52 +31,43 @@
 4. **Скопируйте и вставьте код**  
    Скопируйте приведённый ниже код и вставьте его в редактор Pine Script предварительно удалив текст который был там:
    ![Pine Editor](img/pine_editor2.png)
-   ```pine
-   //@version=5
-   indicator(title="Gas Futures Spread (Abs or %)", shorttitle="GasSpread", overlay=false)
-   
-   // --- Вводимые параметры
-   instrument1  = input.symbol("RUS:NGJ2025", "Instrument 1")
-   instrument2  = input.symbol("RUS:NGH2025", "Instrument 2")
-   usePercent   = input.bool(false, "Use Percentage Spread Calculation?")
-   thresholdVal = input.float(0.035, "Threshold")
-   
-   // --- Получаем цены с выбранных тикеров
-   price1 = request.security(instrument1, timeframe.period, close)
-   price2 = request.security(instrument2, timeframe.period, close)
-   
-   // --- Считаем спред
-   spread = usePercent 
-       ? (price1 - price2) / price2 * 100 
-       : (price1 - price2)
-   
-   // --- Рисуем сам спред
-   plot(spread, color=color.yellow, linewidth=2, title="Spread")
-   
-   // --- Рисуем две горизонтальные линии: +thresholdVal и -thresholdVal
-   hline(+thresholdVal, title="Upper Threshold", color=color.green, linewidth=1)
-   hline(-thresholdVal, title="Lower Threshold", color=color.green, linewidth=1)
-   
-   // --- Настраиваем алерты
-   alertcondition(
-       spread >= thresholdVal, 
-       title="Spread >= Threshold", 
-       message="Spread превысил установленный порог!"
-   )
-   
-   alertcondition(
-       spread <= -thresholdVal, 
-       title="Spread <= -Threshold", 
-       message="Spread опустился ниже -установленного порога!"
-   )
-   ```
 
+```pine
+// Версия скрипта
+//@version=5
+indicator(title="Gas Futures Spread", shorttitle="GasSpread", overlay=false)
+
+// Вводимые параметры
+instrument1 = input.symbol("RUS:NGJ2025", "Instrument 1")
+instrument2 = input.symbol("RUS:NGH2025", "Instrument 2")
+threshold   = input.float(0.035, "Threshold for Price Difference")
+
+// Получаем цены закрытия с указанных тикеров на текущем таймфрейме
+price1 = request.security(instrument1, timeframe.period, close)
+price2 = request.security(instrument2, timeframe.period, close)
+
+// Считаем спред
+spread = price1 - price2
+
+// Рисуем спред на графике
+plot(spread, color=color.yellow, linewidth=2, title="Spread")
+
+// Для наглядности — горизонтальные линии на уровне порога и -порога
+hline(threshold,  color=color.new(color.green, 0), linewidth=1, title="Upper Threshold")
+hline(-threshold, color=color.new(color.green, 0), linewidth=1, title="Lower Threshold")
+
+// Условия для алертов
+    alertcondition(spread >= threshold,  title="Spread >= Threshold",   message="Spread превысил установленный порог!")
+    alertcondition(spread <= -threshold, title="Spread <= -Threshold",  message="Spread опустился ниже -установленного порога!")
+```
 5. **Сохраните и добавьте индикатор на график**  
-   Нажмите **Save** (Сохранить), затем **Add to Chart** (Добавить на график).
-
+   Нажмите **Добавить на график** , затем **Опубликовать индикатор**, на открывшейся старнице выберите **Опубликовать новый скрипт**, напишите любое описание и нажмите **Продолжить** , затем выбирите **Приватный скрипт**, видимость **Открыт** и нажмите кнопку **Опубликовать приватный скрипт**
+   
 6. **Настройте параметры индикатора**  
+   Теперь вернемся на график, закрываем Pine редактор нажатием на _ и перейдем в настройки индикатора.
+   ![Настройка индикатора](img/settings1.png)
    В настройках (иконка шестерёнки) можно изменить тикеры, режим расчета спреда и пороговое значение.  
-   ![Настройка индикатора](img/indicator_setup.png)
+   ![Настройка индикатора](img/setup.png)
 
 ---
 
@@ -88,7 +77,7 @@
 
 1. **Откройте окно Alerts**  
    После добавления индикатора на график нажмите кнопку **Alerts** на верхней панели или используйте сочетание клавиш `Alt + A`.  
-   ![Открытие окна Alerts](img/alerts_setup.png)
+   ![Открытие окна Alerts](img/notification.png)
 
 2. **Создайте новый алерт**  
    Нажмите **Create Alert** (Создать алерт).
@@ -105,7 +94,7 @@
    - Тип уведомления (звук, всплывающее окно, e-mail и т.д.)
    - Частоту срабатывания алерта (одноразово или при каждом изменении условия).
    - Текст уведомления (можно оставить предложенный по умолчанию или изменить по своему усмотрению).
-
+   - **Поставьте максимальную дату истечение срока если у вас бесплатная версия tradingview** или поставьте галочку бессрочное оповещение.
 5. **Сохраните алерт**  
    Нажмите **Create**, чтобы активировать уведомление.
 
